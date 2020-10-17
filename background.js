@@ -7,9 +7,6 @@ chrome.runtime.onInstalled.addListener(function () {
       {
         conditions: [
           new chrome.declarativeContent.PageStateMatcher({
-            pageUrl: { hostEquals: "developer.chrome.com" },
-          }),
-          new chrome.declarativeContent.PageStateMatcher({
             pageUrl: { hostEquals: "zozo.jp" },
           }),
           new chrome.declarativeContent.PageStateMatcher({
