@@ -3,8 +3,13 @@ let applyInfo = document.getElementById("applyInfo");
 
 const getPageContents = `(function getPageContents() {
 let productName = document.getElementById("item-intro").getElementsByTagName("h1")[0].textContent;
-let detailInfo = document.getElementById("itemDetailInfo").getElementsByTagName("dd");
-let productId = detailInfo[detailInfo.length-2].textContent;
+let detailInfos = document.getElementById("itemDetailInfo").getElementsByTagName("dd");
+var productId;
+for (var i = 0; i < detailInfos.length; i++) {
+  if (detailInfos[i].textContent.includes("（ZOZO）")) {
+    productId = detailInfos[i].textContent;
+  }
+}
 return {productName, productId};
 })()`;
 
