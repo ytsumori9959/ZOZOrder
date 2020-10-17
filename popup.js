@@ -26,31 +26,36 @@ retrieveInfo.onclick = function (element) {
     chrome.tabs.executeScript(tabs[0].id, { code: getPageContents }, function (
       result
     ) {
-      let { productName, productId, productPrice } = result[0];
+      if (result) {
+        let { productName, productId, productPrice } = result[0];
+        if (productName && productId && productPrice) {
+          let lastIndex = productId.indexOf("（");
+          let formattedProductId = productId.slice(0, lastIndex);
 
-      let lastIndex = productId.indexOf("（");
-      let formattedProductId = productId.slice(0, lastIndex);
+          let firstIndex = productPrice.indexOf("¥");
+          lastIndex = productPrice.indexOf("税");
+          let priceStrings;
+          if (lastIndex > 0) {
+            priceStrings = productPrice
+              .slice(firstIndex + 1, lastIndex)
+              .split(",");
+          } else {
+            priceStrings = productPrice
+              .slice(firstIndex + 1, productPrice.length)
+              .split(",");
+          }
 
-      let firstIndex = productPrice.indexOf("¥");
-      lastIndex = productPrice.indexOf("税");
-      let priceStrings;
-      if (lastIndex > 0) {
-        priceStrings = productPrice.slice(firstIndex + 1, lastIndex).split(",");
-      } else {
-        priceStrings = productPrice
-          .slice(firstIndex + 1, productPrice.length)
-          .split(",");
+          let formattedProductPrice = "";
+          priceStrings.forEach(function (priceString, index) {
+            formattedProductPrice += priceString;
+          });
+          storeInfoToStorage(
+            productName,
+            formattedProductId,
+            formattedProductPrice
+          );
+        }
       }
-
-      let formattedProductPrice = "";
-      priceStrings.forEach(function (priceString, index) {
-        formattedProductPrice += priceString;
-      });
-      storeInfoToStorage(
-        productName,
-        formattedProductId,
-        formattedProductPrice
-      );
     });
   });
 };
@@ -61,32 +66,21 @@ function storeInfoToStorage(productName, productId, productPrice) {
     productId: productId,
     productPrice: productPrice,
   });
-  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-    chrome.tabs.executeScript(tabs[0].id, {
-      code:
-        'alert("アイテム名称：" + "' +
-        productName +
-        '" + "\\n品番：" + "' +
-        productId +
-        '" + "\\n上代：" + "' +
-        productPrice +
-        '");',
-    });
-  });
+}
+
+function applyPageInfo(productName, productId, productPrice) {
+  return `(function applyPageInfo() {
+    // TODO Implement Method
+  })()`
 }
 
 applyInfo.onclick = function (element) {
   chrome.storage.sync.get(
     ["productName", "productId", "productPrice"],
     function (data) {
-      console.log(
-        "商品名：" +
-          data.productName +
-          "、品番：" +
-          data.productId +
-          "、上代：" +
-          data.productPrice
-      );
+      chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+        chrome.tabs.executeScript(tabs[0].id, { code: applyPageInfo(data.productName, data.productId, data.productPrice) });
+      });
     }
   );
 };
