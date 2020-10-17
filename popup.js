@@ -2,15 +2,23 @@ let retrieveInfo = document.getElementById("retrieveInfo");
 let applyInfo = document.getElementById("applyInfo");
 
 const getPageContents = `(function getPageContents() {
-let productName = document.getElementById("item-intro").getElementsByTagName("h1")[0].textContent;
-let detailInfos = document.getElementById("itemDetailInfo").getElementsByTagName("dd");
-var productId;
-for (var i = 0; i < detailInfos.length; i++) {
-  if (detailInfos[i].textContent.includes("（ZOZO）")) {
-    productId = detailInfos[i].textContent;
+  let itemIntro = document.getElementById("item-intro");
+  let textMutedContents = itemIntro.getElementsByClassName("textMuted");
+  let productPrice;
+  if (textMutedContents[0]) {
+    productPrice = textMutedContents[0].textContent;
+  } else {
+    productPrice = itemIntro.getElementsByClassName("goods-price")[0].textContent;
   }
-}
-return {productName, productId};
+  let productName = itemIntro.getElementsByTagName("h1")[0].textContent;
+  let detailInfos = document.getElementById("itemDetailInfo").getElementsByTagName("dd");
+  let productId;
+  for (var i = 0; i < detailInfos.length; i++) {
+    if (detailInfos[i].textContent.includes("（ZOZO）")) {
+      productId = detailInfos[i].textContent;
+    }
+  }
+  return {productName, productId, productPrice};
 })()`;
 
 retrieveInfo.onclick = function (element) {
@@ -18,20 +26,67 @@ retrieveInfo.onclick = function (element) {
     chrome.tabs.executeScript(tabs[0].id, { code: getPageContents }, function (
       result
     ) {
-      let { productName, productId } = result[0];
+      let { productName, productId, productPrice } = result[0];
+
       let lastIndex = productId.indexOf("（");
       let formattedProductId = productId.slice(0, lastIndex);
-      storeInfoToStorage(productName, formattedProductId);
+
+      let firstIndex = productPrice.indexOf("¥");
+      lastIndex = productPrice.indexOf("税");
+      let priceStrings;
+      if (lastIndex > 0) {
+        priceStrings = productPrice.slice(firstIndex + 1, lastIndex).split(",");
+      } else {
+        priceStrings = productPrice
+          .slice(firstIndex + 1, productPrice.length)
+          .split(",");
+      }
+
+      let formattedProductPrice = "";
+      priceStrings.forEach(function (priceString, index) {
+        formattedProductPrice += priceString;
+      });
+      storeInfoToStorage(
+        productName,
+        formattedProductId,
+        formattedProductPrice
+      );
     });
   });
 };
 
-function storeInfoToStorage(productName, productId) {
-  chrome.storage.sync.set({ productName: productName, productId: productId });
+function storeInfoToStorage(productName, productId, productPrice) {
+  chrome.storage.sync.set({
+    productName: productName,
+    productId: productId,
+    productPrice: productPrice,
+  });
+  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+    chrome.tabs.executeScript(tabs[0].id, {
+      code:
+        'alert("アイテム名称：" + "' +
+        productName +
+        '" + "\\n品番：" + "' +
+        productId +
+        '" + "\\n上代：" + "' +
+        productPrice +
+        '");',
+    });
+  });
 }
 
 applyInfo.onclick = function (element) {
-  chrome.storage.sync.get(["productName", "productId"], function (data) {
-    console.log("商品名：" + data.productName + "、品番：" + data.productId);
-  });
+  chrome.storage.sync.get(
+    ["productName", "productId", "productPrice"],
+    function (data) {
+      console.log(
+        "商品名：" +
+          data.productName +
+          "、品番：" +
+          data.productId +
+          "、上代：" +
+          data.productPrice
+      );
+    }
+  );
 };
