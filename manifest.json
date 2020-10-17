@@ -2,14 +2,9 @@
   "name": "ZOZOrder",
   "version": "1.0",
   "description": "Retrieve ZOZOTOWN Product Page Information",
-  "permissions": [
-    "declarativeContent",
-    "storage"
-  ],
+  "permissions": ["activeTab", "declarativeContent", "storage"],
   "background": {
-    "scripts": [
-      "background.js"
-    ],
+    "scripts": ["background.js"],
     "persistent": false
   },
   "page_action": {
