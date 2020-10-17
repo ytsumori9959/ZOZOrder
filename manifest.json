@@ -2,5 +2,10 @@
   "name": "ZOZOrder",
   "version": "1.0",
   "description": "Retrieve ZOZOTOWN Product Page Information",
+  "permissions": ["storage"],
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": false
+  },
   "manifest_version": 2
 }
